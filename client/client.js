@@ -31,7 +31,7 @@ window.__ModuleLoader__.load({
       average: '平均',
       peak: '峰值',
       summary: '结论',
-      summaryLine: '过去 {span}：CPU 平均 {avgCpu}%，峰值 {maxCpu}%；内存平均 {avgMem}%，峰值 {maxMem}%',
+      summaryLine: '过去 {span}：CPU 平均 {avgCpu}，峰值 {maxCpu}；内存平均 {avgMem}，峰值 {maxMem}',
       hotCpu: 'CPU ≥ {pct}% 累计 {minutes} 分钟',
       hotMem: '内存 ≥ {pct}% 累计 {minutes} 分钟',
       throttle: '疑似降频累计 {minutes} 分钟',
@@ -54,7 +54,8 @@ window.__ModuleLoader__.load({
       spanHours: '覆盖 {hours} 小时',
       samples: '{count} 个样本',
       memUsed: '{used} / {total} GB',
-      freqPercent: '{value}% 最高频率',
+      freqCardNote: '低于 {freq}% 且 CPU ≥ {cpu}% 持续 {minutes} 分钟才算疑似降频；空闲时频率降低是正常的',
+      freqThreshold: '降频线 {value}',
       diskRate: '{value} MB/s',
       netRate: '{value} MB/s'
     }
@@ -79,7 +80,7 @@ window.__ModuleLoader__.load({
       average: 'Average',
       peak: 'Peak',
       summary: 'Summary',
-      summaryLine: 'Last {span}: CPU avg {avgCpu}% (peak {maxCpu}%), memory avg {avgMem}% (peak {maxMem}%)',
+      summaryLine: 'Last {span}: CPU avg {avgCpu} (peak {maxCpu}), memory avg {avgMem} (peak {maxMem})',
       hotCpu: 'CPU ≥ {pct}% for {minutes} min',
       hotMem: 'Memory ≥ {pct}% for {minutes} min',
       throttle: 'Throttling for {minutes} min',
@@ -102,7 +103,8 @@ window.__ModuleLoader__.load({
       spanHours: '{hours} h covered',
       samples: '{count} samples',
       memUsed: '{used} / {total} GB',
-      freqPercent: '{value}% of max',
+      freqCardNote: 'Counted as likely throttling only below {freq}% while CPU ≥ {cpu}% for {minutes} min; a low frequency at idle is normal',
+      freqThreshold: 'limit {value}',
       diskRate: '{value} MB/s',
       netRate: '{value} MB/s'
     }
@@ -307,6 +309,25 @@ window.__ModuleLoader__.load({
         return padTop + plotH * (1 - Math.min(1, Math.max(0, scaled)))
       }
 
+      var threshold = payload.threshold
+      if (threshold !== undefined && threshold !== null && typeof threshold.value === 'number') {
+        var thresholdY = yAt(threshold.value)
+        ctx.save()
+        ctx.setLineDash([4, 3])
+        ctx.lineWidth = 1
+        ctx.strokeStyle = threshold.color || 'rgba(209,98,98,.45)'
+        ctx.beginPath()
+        ctx.moveTo(padLeft, thresholdY)
+        ctx.lineTo(padLeft + plotW, thresholdY)
+        ctx.stroke()
+        ctx.restore()
+        if (threshold.label) {
+          ctx.fillStyle = threshold.color || 'rgba(209,98,98,.75)'
+          ctx.textAlign = 'right'
+          ctx.fillText(threshold.label, padLeft + plotW, Math.max(padTop + 6, thresholdY - 3))
+        }
+      }
+
       for (var lineIndex = 0; lineIndex < payload.lines.length; lineIndex += 1) {
         var line = payload.lines[lineIndex]
         var data = line.data || []
@@ -364,9 +385,10 @@ window.__ModuleLoader__.load({
           lines: lines,
           min: 0,
           max: props.max,
+          threshold: props.threshold,
           axisLabel: props.axisLabel
         })
-      }, [size.width, size.height, props.times, props.max, lines])
+      }, [size.width, size.height, props.times, props.max, props.threshold, lines])
 
       var latest = function (line) {
         var data = line.data || []
@@ -459,7 +481,18 @@ window.__ModuleLoader__.load({
         { key: 'cpu', label: t('cpu'), color: '#4f9cf9', data: series.cpu, format: formatPercent },
         { key: 'mem', label: t('memory'), color: '#a97cf3', data: series.mem, format: formatPercent }
       ]
-      var freqLines = [{ key: 'freq', label: t('freq'), color: '#e0a03a', data: series.freq, format: function (v) { return Math.round(v) + '%' } }]
+      var freqLines = [
+        { key: 'freq', label: t('freq'), color: '#e0a03a', data: series.freq, format: function (v) { return Math.round(v) + '%' } },
+        { key: 'cpu', label: t('cpu'), color: '#4f9cf9', data: series.cpu, format: formatPercent }
+      ]
+      var throttleFreqPct = typeof rules.throttleFreqPct === 'number' ? rules.throttleFreqPct : 70
+      var throttleCpuPct = typeof rules.throttleCpuPct === 'number' ? rules.throttleCpuPct : 50
+      var throttleMinutesNeeded = typeof rules.throttleMinutes === 'number' ? rules.throttleMinutes : 5
+      var throttleThreshold = {
+        value: throttleFreqPct,
+        label: t('freqThreshold', { value: throttleFreqPct + '%' }),
+        color: 'rgba(209,98,98,.45)'
+      }
       var ioLines = [
         { key: 'diskR', label: t('disk') + ' ' + t('read'), color: '#54b08a', data: series.diskR, format: formatRate },
         { key: 'netRx', label: t('network') + ' ' + t('rx'), color: '#4f9cf9', data: series.netRx, format: formatRate }
@@ -516,7 +549,7 @@ window.__ModuleLoader__.load({
           { className: 'dsh-rt-kpis' },
           h(Kpi, { label: t('cpu'), value: current ? formatPercent(current.cpu) : '—', note: summary ? t('average') + ' ' + formatPercent(summary.avgCpu) : '' }),
           h(Kpi, { label: t('memory'), value: current ? formatPercent(current.mem) : '—', note: current && typeof current.memUsedGb === 'number' ? t('memUsed', { used: current.memUsedGb.toFixed(1), total: (current.memTotalGb || 0).toFixed(1) }) : '' }),
-          h(Kpi, { label: t('freq'), value: current && typeof current.freq === 'number' ? Math.round(current.freq) + '%' : '—', note: current && typeof current.freq !== 'number' ? t('noFreq') : (summary ? t('peak') + ' ' + formatPercent(summary.maxCpu) : '') })
+          h(Kpi, { label: t('freq'), value: current && typeof current.freq === 'number' ? Math.round(current.freq) + '%' : '—', note: current && typeof current.freq !== 'number' ? t('noFreq') : (summary ? t('average') + ' ' + formatPercent(summary.avgFreq) : '') })
         ),
         empty || data.status !== 'ready' || value === null ? null : h(
           'div',
@@ -532,9 +565,9 @@ window.__ModuleLoader__.load({
           { className: 'dsh-rt-card' },
           h('div', { className: 'dsh-rt-card-head' },
             h('span', { className: 'dsh-rt-card-title' }, t('freq')),
-            h('span', { className: 'dsh-rt-card-note' }, t('freqPercent', { value: typeof rules.throttleFreqPct === 'number' ? rules.throttleFreqPct : 70 }) + ' ↓ = ' + t('eventThrottle'))
+            h('span', { className: 'dsh-rt-card-note' }, t('freqCardNote', { freq: throttleFreqPct, cpu: throttleCpuPct, minutes: throttleMinutesNeeded }))
           ),
-          h(TrendChart, { t: t, times: series.times, lines: freqLines, max: 100, height: 90, axisLabel: function (ratio) { return Math.round(ratio * 100) + '%' } })
+          h(TrendChart, { t: t, times: series.times, lines: freqLines, max: 100, height: 90, threshold: throttleThreshold, axisLabel: function (ratio) { return Math.round(ratio * 100) + '%' } })
         ),
         empty || data.status !== 'ready' || value === null ? null : h(
           'div',

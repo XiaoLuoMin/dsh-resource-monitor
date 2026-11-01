@@ -56,6 +56,7 @@ window.__ModuleLoader__.load({
       memUsed: '{used} / {total} GB',
       freqCardNote: '低于 {freq}% 且 CPU ≥ {cpu}% 持续 {minutes} 分钟才算疑似降频；空闲时频率降低是正常的',
       freqThreshold: '降频线 {value}',
+    hotThreshold: '告警线 {value}',
       diskRate: '{value} MB/s',
       netRate: '{value} MB/s'
     }
@@ -105,6 +106,7 @@ window.__ModuleLoader__.load({
       memUsed: '{used} / {total} GB',
       freqCardNote: 'Counted as likely throttling only below {freq}% while CPU ≥ {cpu}% for {minutes} min; a low frequency at idle is normal',
       freqThreshold: 'limit {value}',
+    hotThreshold: 'alert {value}',
       diskRate: '{value} MB/s',
       netRate: '{value} MB/s'
     }
@@ -477,10 +479,16 @@ window.__ModuleLoader__.load({
       var events = (value && value.events) || []
       var totals = (value && value.totals) || null
 
-      var cpuLines = [
-        { key: 'cpu', label: t('cpu'), color: '#4f9cf9', data: series.cpu, format: formatPercent },
+      var cpuLine = [
+        { key: 'cpu', label: t('cpu'), color: '#4f9cf9', data: series.cpu, format: formatPercent }
+      ]
+      var memLine = [
         { key: 'mem', label: t('memory'), color: '#a97cf3', data: series.mem, format: formatPercent }
       ]
+      var cpuHotPct = typeof rules.cpuHotPct === 'number' ? rules.cpuHotPct : 85
+      var memHotPct = typeof rules.memHotPct === 'number' ? rules.memHotPct : 90
+      var cpuThreshold = { value: cpuHotPct, label: t('hotThreshold', { value: cpuHotPct + '%' }), color: 'rgba(209,98,98,.45)' }
+      var memThreshold = { value: memHotPct, label: t('hotThreshold', { value: memHotPct + '%' }), color: 'rgba(209,98,98,.45)' }
       var freqLines = [
         { key: 'freq', label: t('freq'), color: '#e0a03a', data: series.freq, format: function (v) { return Math.round(v) + '%' } },
         { key: 'cpu', label: t('cpu'), color: '#4f9cf9', data: series.cpu, format: formatPercent }
@@ -492,23 +500,6 @@ window.__ModuleLoader__.load({
         value: throttleFreqPct,
         label: t('freqThreshold', { value: throttleFreqPct + '%' }),
         color: 'rgba(209,98,98,.45)'
-      }
-      var ioLines = [
-        { key: 'diskR', label: t('disk') + ' ' + t('read'), color: '#54b08a', data: series.diskR, format: formatRate },
-        { key: 'netRx', label: t('network') + ' ' + t('rx'), color: '#4f9cf9', data: series.netRx, format: formatRate }
-      ]
-
-      var ioMax = 1
-      ;[series.diskR, series.diskW, series.netRx, series.netTx].forEach(function (data) {
-        for (var index = 0; index < data.length; index += 1) {
-          var item = data[index]
-          if (typeof item === 'number' && isFinite(item) && item > ioMax) ioMax = item
-        }
-      })
-      ioMax = ioMax * 1.15
-
-      var ioAxis = function (ratio) {
-        return formatRate(ioMax * ratio).replace(' MB/s', '')
       }
 
       var empty = data.status === 'ready' && series.times.length <= 1
@@ -555,10 +546,19 @@ window.__ModuleLoader__.load({
           'div',
           { className: 'dsh-rt-card' },
           h('div', { className: 'dsh-rt-card-head' },
-            h('span', { className: 'dsh-rt-card-title' }, t('cpu') + ' · ' + t('memory')),
+            h('span', { className: 'dsh-rt-card-title' }, t('cpu')),
             h('span', { className: 'dsh-rt-card-note' }, coverage)
           ),
-          h(TrendChart, { t: t, times: series.times, lines: cpuLines, max: 100, height: 120, axisLabel: function (ratio) { return Math.round(ratio * 100) + '%' } })
+          h(TrendChart, { t: t, times: series.times, lines: cpuLine, max: 100, height: 120, threshold: cpuThreshold, axisLabel: function (ratio) { return Math.round(ratio * 100) + '%' } })
+        ),
+        empty || data.status !== 'ready' || value === null ? null : h(
+          'div',
+          { className: 'dsh-rt-card' },
+          h('div', { className: 'dsh-rt-card-head' },
+            h('span', { className: 'dsh-rt-card-title' }, t('memory')),
+            h('span', { className: 'dsh-rt-card-note' }, current && typeof current.memUsedGb === 'number' ? t('memUsed', { used: current.memUsedGb.toFixed(1), total: (current.memTotalGb || 0).toFixed(1) }) : '')
+          ),
+          h(TrendChart, { t: t, times: series.times, lines: memLine, max: 100, height: 120, threshold: memThreshold, axisLabel: function (ratio) { return Math.round(ratio * 100) + '%' } })
         ),
         empty || data.status !== 'ready' || value === null ? null : h(
           'div',
@@ -569,15 +569,7 @@ window.__ModuleLoader__.load({
           ),
           h(TrendChart, { t: t, times: series.times, lines: freqLines, max: 100, height: 90, threshold: throttleThreshold, axisLabel: function (ratio) { return Math.round(ratio * 100) + '%' } })
         ),
-        empty || data.status !== 'ready' || value === null ? null : h(
-          'div',
-          { className: 'dsh-rt-card' },
-          h('div', { className: 'dsh-rt-card-head' },
-            h('span', { className: 'dsh-rt-card-title' }, t('disk') + ' · ' + t('network')),
-            h('span', { className: 'dsh-rt-card-note' }, formatRate(ioMax))
-          ),
-          h(TrendChart, { t: t, times: series.times, lines: ioLines, max: ioMax, height: 90, axisLabel: ioAxis })
-        ),
+
         empty || data.status !== 'ready' || summary === null ? null : h(
           'div',
           { className: 'dsh-rt-card' },

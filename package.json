@@ -1,10 +1,11 @@
 {
   "name": "dsh-resource-alerts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Sustained CPU and memory alerts, throttle detection, and 24h / 7d resource history in a DSH sidebar tab.",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
+    ".": "./lib/index.js",
     "./client": "./client/client.js"
   },
   "files": [

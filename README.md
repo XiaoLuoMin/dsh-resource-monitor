@@ -7,7 +7,7 @@ DSH 侧栏插件：每分钟采集一次本机资源，保留 30 天历史，直
 ## What it does / 功能
 
 - Sidebar tab **资源监控**; a matching entry button also sits in the session title bar. / 侧栏 tab「资源监控」，会话标题栏也有入口按钮。
-- Three charts: CPU + memory (%), frequency (% of maximum), disk + network (MB/s). / 三张折线图：CPU+内存、频率、磁盘+网络。
+- Panel order: KPI row, conclusion box, CPU chart (85% alert line), memory chart (90% alert line), frequency chart (70% throttle line), incident list. / 面板顺序：KPI、结论框、CPU 曲线（85% 告警线）、内存曲线（90% 告警线）、频率曲线（70% 降频线）、异常列表。
 - KPI row: current CPU, current memory (used / total GB), current frequency. / KPI：当前 CPU、当前内存（已用/总量 GB）、当前频率。
 - Summary: range average/peak, minutes spent at ≥85% CPU, minutes at ≥90% memory, throttled minutes. / 结论：区间平均/峰值、超阈值累计分钟、降频分钟。
 - Incident list (last 7 days): CPU sustained load, memory near capacity, frequency held down under load. / 异常列表（近 7 天）：CPU 长时间高占用、内存接近上限、负载下降频。
@@ -27,8 +27,8 @@ DSH 侧栏插件：每分钟采集一次本机资源，保留 30 天历史，直
 
 - CPU / memory: Node `os.cpus()` time deltas, `os.totalmem()` / `os.freemem()`.
 - Frequency: Windows performance counter `\Processor Information(_Total)\% of Maximum Frequency`.
-- Disk: `\PhysicalDisk(_Total)\Disk Read Bytes/sec`, `Disk Write Bytes/sec`.
-- Network: `Get-NetAdapterStatistics` cumulative bytes, converted to a rate between two samples.
+- Disk: `\PhysicalDisk(_Total)\Disk Read Bytes/sec`, `Disk Write Bytes/sec` (still sampled into the history, not charted). / 磁盘读写仍写入历史，但不再绘图。
+- Network: `Get-NetAdapterStatistics` cumulative bytes, converted to a rate between two samples (history only, not charted). / 网络同样只入库不绘图。
 - Disk and network figures come from one `powershell.exe` child process per sample (~2–4 s, async, never blocks the UI).
 
 ## No temperature readings / 不采集温度
@@ -63,7 +63,7 @@ One JSON object per line, one line per minute. Delete the file to reset the hist
 
 ```
 lib/index.js        host: sampling loop, 30-day history, POST /api/resource-monitor.snapshot
-client/client.js    client: sidebar tab, entry button, three canvas charts, summary and incident list
+client/client.js    client: sidebar tab, entry button, separate CPU / memory / frequency canvas charts, summary and incident list
 cordis.patch.yml    bundle insert declaration
 ```
 

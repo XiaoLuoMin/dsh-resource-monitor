@@ -1,21 +1,21 @@
 window.__ModuleLoader__.load({
-  id: 'dsh-resource-alerts',
+  id: 'dsh-resource-monitor',
   factory: (require) => {
     var React = require('react')
     var module = { exports: {} }
     var exports = module.exports
 
-    var TYPE_ID = 'dsh-resource-alerts'
-    var KIND = 'resource-alerts'
-    var SNAPSHOT_PATH = '/api/resource-alerts.snapshot'
+    var TYPE_ID = 'dsh-resource-monitor'
+    var KIND = 'resource-monitor'
+    var SNAPSHOT_PATH = '/api/resource-monitor.snapshot'
     var h = React.createElement
     var POLL_MS = 30_000
 
     var ZH = {
-      tabTitle: '资源告警',
-      title: '资源告警',
+      tabTitle: '资源监控',
+      title: '资源监控',
       description: 'CPU 与内存长期占用的告警判定、降频检测，以及 24 小时 / 7 天历史',
-      headerButtonOpen: '打开资源告警面板',
+      headerButtonOpen: '打开资源监控面板',
       range24h: '24 小时',
       range7d: '7 天',
       cpu: 'CPU',
@@ -61,8 +61,8 @@ window.__ModuleLoader__.load({
     }
 
     var EN = {
-      tabTitle: 'Resource alerts',
-      title: 'Resource alerts',
+      tabTitle: 'Resource monitor',
+      title: 'Resource monitor',
       description: 'Sustained CPU and memory alerts, throttle detection and 24h / 7d history',
       headerButtonOpen: 'Open resource trends',
       range24h: '24h',
@@ -169,7 +169,7 @@ window.__ModuleLoader__.load({
     function installStyles() {
       if (stylesInstalled) return function () {}
       var node = document.createElement('style')
-      node.setAttribute('data-dsh-resource-alerts', '')
+      node.setAttribute('data-dsh-resource-monitor', '')
       node.textContent = CSS
       document.head.appendChild(node)
       stylesInstalled = true
@@ -633,7 +633,7 @@ window.__ModuleLoader__.load({
       var t = createTranslator()
       ctx.effect(function () {
         return installStyles()
-      }, 'resource-alerts: stylesheet')
+      }, 'resource-monitor: stylesheet')
 
       ctx.inject(['slots'], function (ui) {
         ui.slots.inject(
@@ -651,7 +651,7 @@ window.__ModuleLoader__.load({
                       try {
                         ctx.get('sidebarRight').openTab(KIND, {})
                       } catch (error) {
-                        ctx.logger && ctx.logger.warn && ctx.logger.warn('resource-alerts: could not open the alerts page: %s', (error && error.message) || String(error))
+                        ctx.logger && ctx.logger.warn && ctx.logger.warn('resource-monitor: could not open the alerts page: %s', (error && error.message) || String(error))
                       }
                     }
                   }
@@ -686,7 +686,7 @@ window.__ModuleLoader__.load({
                 ]
               })
             },
-            'resource-alerts: tab type'
+            'resource-monitor: tab type'
           )
         })
 

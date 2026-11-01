@@ -1,4 +1,4 @@
-# dsh-resource-alerts · 资源告警
+# dsh-resource-monitor · 资源监控
 
 A DeepSeek Harness (dsh) sidebar plugin that samples your Windows machine **once a minute**, keeps a **30-day** history, and tells you when sustained CPU load, memory pressure, or frequency throttling actually happened — instead of showing a live gauge you have to stare at.
 
@@ -6,7 +6,7 @@ DSH 侧栏插件：每分钟采集一次本机资源，保留 30 天历史，直
 
 ## What it does / 功能
 
-- Sidebar tab **资源告警**; a matching entry button also sits in the session title bar. / 侧栏 tab「资源告警」，会话标题栏也有入口按钮。
+- Sidebar tab **资源监控**; a matching entry button also sits in the session title bar. / 侧栏 tab「资源监控」，会话标题栏也有入口按钮。
 - Three charts: CPU + memory (%), frequency (% of maximum), disk + network (MB/s). / 三张折线图：CPU+内存、频率、磁盘+网络。
 - KPI row: current CPU, current memory (used / total GB), current frequency. / KPI：当前 CPU、当前内存（已用/总量 GB）、当前频率。
 - Summary: range average/peak, minutes spent at ≥85% CPU, minutes at ≥90% memory, throttled minutes. / 结论：区间平均/峰值、超阈值累计分钟、降频分钟。
@@ -40,7 +40,7 @@ Windows 上读取 CPU 核心温度需要内核驱动。本插件不附带、也�
 ## Install / 安装
 
 ```sh
-dsh plugin --profile desktop add github:XiaoLuoMin/dsh-resource-alerts
+dsh plugin --profile desktop add github:XiaoLuoMin/dsh-resource-monitor
 ```
 
 Then restart the DSH app so both the host and the client half load. / 装完重启 DSH 应用（host 与 client 两半都要重新加载）。
@@ -48,13 +48,13 @@ Then restart the DSH app so both the host and the client half load. / 装完重�
 Uninstall / 卸载:
 
 ```sh
-dsh plugin --profile desktop remove dsh-resource-alerts
+dsh plugin --profile desktop remove dsh-resource-monitor
 ```
 
 ## Data location / 数据位置
 
 ```
-%USERPROFILE%\.dsh\data\resource-alerts\samples.jsonl
+%USERPROFILE%\.dsh\data\resource-monitor\samples.jsonl
 ```
 
 One JSON object per line, one line per minute. Delete the file to reset the history. / 每行一个 JSON 样本，每分钟一行；删除该文件即清空历史。
@@ -62,7 +62,7 @@ One JSON object per line, one line per minute. Delete the file to reset the hist
 ## Layout / 结构
 
 ```
-lib/index.js        host: sampling loop, 30-day history, POST /api/resource-alerts.snapshot
+lib/index.js        host: sampling loop, 30-day history, POST /api/resource-monitor.snapshot
 client/client.js    client: sidebar tab, entry button, three canvas charts, summary and incident list
 cordis.patch.yml    bundle insert declaration
 ```

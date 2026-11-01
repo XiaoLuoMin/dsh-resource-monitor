@@ -542,6 +542,29 @@ window.__ModuleLoader__.load({
           h(Kpi, { label: t('memory'), value: current ? formatPercent(current.mem) : '—', note: current && typeof current.memUsedGb === 'number' ? t('memUsed', { used: current.memUsedGb.toFixed(1), total: (current.memTotalGb || 0).toFixed(1) }) : '' }),
           h(Kpi, { label: t('freq'), value: current && typeof current.freq === 'number' ? Math.round(current.freq) + '%' : '—', note: current && typeof current.freq !== 'number' ? t('noFreq') : (summary ? t('average') + ' ' + formatPercent(summary.avgFreq) : '') })
         ),
+        empty || data.status !== 'ready' || summary === null ? null : h(
+          'div',
+          { className: 'dsh-rt-card' },
+          h('div', { className: 'dsh-rt-card-head' }, h('span', { className: 'dsh-rt-card-title' }, t('summary'))),
+          h(
+            'div',
+            { className: 'dsh-rt-summary' },
+            h('span', null, t('summaryLine', {
+              span: formatSpan(summary.spanMinutes),
+              avgCpu: formatPercent(summary.avgCpu),
+              maxCpu: formatPercent(summary.maxCpu),
+              avgMem: formatPercent(summary.avgMem),
+              maxMem: formatPercent(summary.maxMem)
+            })),
+            h('div', { className: 'dsh-rt-legend' },
+              h('span', { className: 'dsh-rt-pill' }, t('hotCpu', { pct: rules.cpuHotPct, minutes: summary.cpuHotMinutes })),
+              h('span', { className: 'dsh-rt-pill' }, t('hotMem', { pct: rules.memHotPct, minutes: summary.memHotMinutes })),
+              h('span', { className: 'dsh-rt-pill' }, t('throttle', { minutes: summary.throttleMinutes })),
+              h('span', { className: 'dsh-rt-pill' }, t('idle', { minutes: summary.idleMinutes }))
+            )
+          )
+        ),
+
         empty || data.status !== 'ready' || value === null ? null : h(
           'div',
           { className: 'dsh-rt-card' },
@@ -570,28 +593,6 @@ window.__ModuleLoader__.load({
           h(TrendChart, { t: t, times: series.times, lines: freqLines, max: 100, height: 90, threshold: throttleThreshold, axisLabel: function (ratio) { return Math.round(ratio * 100) + '%' } })
         ),
 
-        empty || data.status !== 'ready' || summary === null ? null : h(
-          'div',
-          { className: 'dsh-rt-card' },
-          h('div', { className: 'dsh-rt-card-head' }, h('span', { className: 'dsh-rt-card-title' }, t('summary'))),
-          h(
-            'div',
-            { className: 'dsh-rt-summary' },
-            h('span', null, t('summaryLine', {
-              span: formatSpan(summary.spanMinutes),
-              avgCpu: formatPercent(summary.avgCpu),
-              maxCpu: formatPercent(summary.maxCpu),
-              avgMem: formatPercent(summary.avgMem),
-              maxMem: formatPercent(summary.maxMem)
-            })),
-            h('div', { className: 'dsh-rt-legend' },
-              h('span', { className: 'dsh-rt-pill' }, t('hotCpu', { pct: rules.cpuHotPct, minutes: summary.cpuHotMinutes })),
-              h('span', { className: 'dsh-rt-pill' }, t('hotMem', { pct: rules.memHotPct, minutes: summary.memHotMinutes })),
-              h('span', { className: 'dsh-rt-pill' }, t('throttle', { minutes: summary.throttleMinutes })),
-              h('span', { className: 'dsh-rt-pill' }, t('idle', { minutes: summary.idleMinutes }))
-            )
-          )
-        ),
         empty || data.status !== 'ready' ? null : h(
           'div',
           { className: 'dsh-rt-card' },

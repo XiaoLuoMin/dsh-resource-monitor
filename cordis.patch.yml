@@ -1,0 +1,3 @@
+- insert:
+    - id: resource-alerts
+      name: 'dsh-resource-alerts'

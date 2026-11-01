@@ -1,0 +1,56 @@
+{
+  "name": "dsh-resource-alerts",
+  "version": "1.0.0",
+  "description": "Sustained CPU and memory alerts, throttle detection, and 24h / 7d resource history in a DSH sidebar tab.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    "./client": "./client/client.js"
+  },
+  "files": [
+    "lib",
+    "client",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "screenshots.json"
+  ],
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "monitoring",
+    "alerts",
+    "cpu",
+    "memory",
+    "windows"
+  ],
+  "license": "MIT",
+  "author": "XiaoLuoMin",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/XiaoLuoMin/dsh-resource-alerts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/XiaoLuoMin/dsh-resource-alerts/issues"
+  },
+  "homepage": "https://github.com/XiaoLuoMin/dsh-resource-alerts#readme",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-sidebar-right"
+      ],
+      "platform": "web"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "~4.0.4"
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  }
+}

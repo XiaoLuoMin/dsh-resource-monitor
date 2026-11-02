@@ -70,3 +70,10 @@ cordis.patch.yml    bundle insert declaration
 ## License
 
 MIT — see [LICENSE](LICENSE).
+## Changelog / 版本记录
+
+- **1.1.2** — 结论框移到 CPU 曲线之上；面板顺序：KPI → 结论 → CPU → 内存 → 频率 → 事件。
+- **1.1.1** — CPU 与内存拆成两张独立曲线（各带 85% / 90% 告警线），移除磁盘与网络曲线。
+- **1.1.0** — 插件更名为 dsh-resource-monitor（原 dsh-resource-alerts）。
+- **1.0.2** — 修复结论行的重复百分号；频率卡片增加 CPU 叠加线与 70% 降频基准线。
+- **1.0.1** — 修复 exports 缺少根入口导致 DSH 无法导入。
